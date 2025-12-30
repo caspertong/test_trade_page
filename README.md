@@ -4,22 +4,32 @@ This project is a Selenium automation framework designed to test the [AQX Trader
 
 ## Features / Test Scenarios
 
-The framework covers (or aims to cover) the following key trading functionalities:
+The framework currently covers the following trading scenarios as implemented in `tests/test_trading.py`:
 
-1.  **Buy/Sell order without One-Click Trading function**
-    - Verification of standard order placement flow involving confirmation steps.
-2.  **See the list of trading transactions and order notifications**
-    - validation of transaction history and real-time order notifications.
-3.  **Bulk close / delete orders**
-    - Testing functionality to close multiple positions or delete multiple pending orders simultaneously.
-4.  **Place Market with Stop Loss and Take Profit**
-    - Executing market orders with attached SL/TP parameters.
-5.  **Edit, partial close and close Open position**
-    - Modifying existing open positions, including partial closures and full closures.
-6.  **Place Limit / Stop order with different types of Expiry**
-    - Creating pending orders (Limit/Stop) with various expiry settings (GTC, GTD, etc.).
-7.  **Edit Pending Orders for all values included**
-    - Updating parameters (Price, SL, TP, Expiry) of existing pending orders.
+### 1. Market Orders
+- **Buy Market Order**: Place a standard Buy Market order and verify position opening.
+- **Sell Market Order**: Place a standard Sell Market order and verify position opening.
+- **Buy Market with SL/TP**: Place a Buy Market order with Stop Loss and Take Profit levels associated.
+- **Sell Market with SL/TP**: Place a Sell Market order with Stop Loss and Take Profit levels associated.
+
+### 2. Position Management
+- **Edit Position**: Edit an existing open position to update Stop Loss and Take Profit levels.
+- **Close Position**: Fully close an existing open position and verify removal from the list.
+- **Partial Close**: Partially close a position (e.g., closing 1 lot of a 2 lot position) and verify the remaining volume.
+
+### 3. Pending Orders (Limit & Stop) with Expiry
+- **Buy Limit Order (GTC)**: Place a Buy Limit order with "Good Till Canceled" expiry.
+- **Buy Stop Order (GTC)**: Place a Buy Stop order with "Good Till Canceled" expiry.
+- **Buy Limit Order (GTD)**: Place a Buy Limit order with "Good Till Day" expiry.
+- **Buy Stop Order (GTD)**: Place a Buy Stop order with "Good Till Day" expiry.
+- **Buy Limit Order (Specified Date)**: Place a Buy Limit order expiring on a specified date.
+- **Buy Stop Order (Specified Date)**: Place a Buy Stop order expiring on a specified date.
+- **Buy Limit Order (Specified Date & Time)**: Place a Buy Limit order expiring on a specific date and time.
+- **Buy Stop Order (Specified Date & Time)**: Place a Buy Stop order expiring on a specific date and time.
+- **Edit Pending Order**: Edit an existing pending order (Limit/Stop) to update Stop Loss and Take Profit levels.
+
+### 4. Bulk Operations
+- **Bulk Close All Positions**: Close all open positions simultaneously and verify that no open positions remain.
 
 ## Prerequisites
 
@@ -37,14 +47,14 @@ pip install -r requirements.txt
 
 ## Running Tests
 
-To run the tests, use the following command from the root directory:
+To run the trading tests, use the following command from the root directory:
 
 ```bash
-pytest tests/test_login.py --html=report.html
+pytest tests/test_trading.py --html=report_trading.html
 ```
 
 ## Project Structure
 
-- `pages/`: Page Object Model (POM) classes representing web pages.
+- `pages/`: Page Object Model (POM) classes representing web pages (`trading_page.py`, `login_page.py`).
 - `tests/`: Test scripts using Pytest.
-- `report.html`: Generated test report (after running tests).
+- `report_trading.html`: Generated test report for trading tests.
