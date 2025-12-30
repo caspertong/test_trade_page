@@ -50,7 +50,20 @@ pip install -r requirements.txt
 To run the trading tests, use the following command from the root directory:
 
 ```bash
-pytest tests/test_trading.py --html=report_trading.html
+pytest tests/test_trading.py --html=report_trading.html --alluredir=allure-results
+```
+
+### Generating Allure Report
+
+**Prerequisite:**
+To view the report, you must have the **[Allure Commandline](https://docs.qameta.io/allure/#_installing_a_commandline)** tool installed on your system (e.g., via `scoop install allure` on Windows or `brew install allure` on macOS). This is separate from the python library installed via `requirements.txt`.
+
+**Steps:**
+1.  **Generate Data**: Run the tests with the `--alluredir` flag (included in the command above).
+2.  **View Report**: Run the following command to serve the report in your browser:
+
+```bash
+allure serve allure-results
 ```
 
 ## Project Structure
