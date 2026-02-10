@@ -160,65 +160,53 @@ class TradingPage(BasePage):
         self.driver.find_element(*self.VOLUME_INPUT).send_keys(Keys.TAB)
 
     def buy_sell_order(self, buy_sell, order_type, volume, price=None, sl=None, tp=None, expiry=None):
-        # 1. Click Buy or Sell (Setup)
+        """Place a buy or sell order with specified parameters"""
+        # 1. Click Buy or Sell
         if buy_sell.lower() == 'buy':
             self.click(self.BUY_BUTTON)
         else:
             self.click(self.SELL_BUTTON)
-            
-        time.sleep(1)
 
         # 2. Select Order Type
         self.select_order_type(order_type)
 
-        time.sleep(1)
-
         # 3. Set Volume
         self.set_volume(volume)
 
-        # 4. Set Price if provided
+        # 4. Set Price if provided (for Limit/Stop orders)
         if price:
-            wait = WebDriverWait(self.driver, 10)
-            price_input = wait.until(EC.element_to_be_clickable(self.PRICE_INPUT))
+            price_input = self.wait_for_element_clickable(self.PRICE_INPUT)
             price_input.send_keys(Keys.CONTROL + "a")
             price_input.send_keys(Keys.BACKSPACE)
             price_input.send_keys(str(price))
-            time.sleep(1)
-            # Click something else to trigger blur?
-            self.click(self.BUY_BUTTON)
+            # Click to trigger blur event
+            self.click(self.BUY_BUTTON if buy_sell.lower() == 'buy' else self.SELL_BUTTON)
         
-        # 5. Set SL/TP points if provided
+        # 5. Set SL/TP if provided
         if sl:
             self.send_keys(self.SL_PRICE_INPUT, str(sl))
-            self.click(self.BUY_BUTTON)
+            self.click(self.BUY_BUTTON if buy_sell.lower() == 'buy' else self.SELL_BUTTON)
         if tp:
             self.send_keys(self.TP_PRICE_INPUT, str(tp))
-            self.click(self.BUY_BUTTON)
+            self.click(self.BUY_BUTTON if buy_sell.lower() == 'buy' else self.SELL_BUTTON)
 
-        # 6. Set Expiry
+        # 6. Set Expiry if provided
         if expiry:
             self.select_expiry(expiry)
 
         # 7. Click Place Order
-        time.sleep(1)
         self.click(self.PLACE_ORDER_BUTTON)
         
         # 8. Confirm if modal appears
-        try:
-            # Short wait for modal
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.CONFIRM_MODAL_BUTTON))
-            if element.is_displayed():
-                self.click(self.CONFIRM_MODAL_BUTTON)
-                time.sleep(3) # Wait for processing
-        except:
-            Exception("Confirmation pop-out not showing") 
+        if self.is_visible(self.CONFIRM_MODAL_BUTTON, timeout=self.short_timeout):
+            self.click(self.CONFIRM_MODAL_BUTTON)
+            # Wait for modal to disappear to ensure order is placed
+            self.wait_for_element_disappear(self.CONFIRM_MODAL_BUTTON, timeout=self.timeout) 
 
     def get_symbol_main(self):
+        """Get symbol text from main display"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.SYMBOL))
-            symbol_text = element.text
+            symbol_text = self.get_text(self.SYMBOL)
             print(f"DEBUG: Symbol Text: '{symbol_text}'")
             return symbol_text
         except Exception as e:
@@ -226,10 +214,9 @@ class TradingPage(BasePage):
             return None
 
     def get_live_price(self):
+        """Get live price for buy"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.BUY_LIVE_PRICE))
-            live_price_text = element.text
+            live_price_text = self.get_text(self.BUY_LIVE_PRICE)
             print(f"DEBUG: Live Price Text: '{live_price_text}'")
             return live_price_text
         except Exception as e:
@@ -241,10 +228,9 @@ class TradingPage(BasePage):
 
     # Open Positions
     def get_open_positions_count(self):
+        """Get count of open positions from tab text"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.OPEN_POSITIONS_TAB))
-            raw_text = element.text
+            raw_text = self.get_text(self.OPEN_POSITIONS_TAB)
             print(f"DEBUG: Raw Position Text: '{raw_text}'")
              
             # Expected format: "Open Positions (x)"
@@ -260,10 +246,9 @@ class TradingPage(BasePage):
             return 0
 
     def get_order_id(self):
+        """Get order ID from position table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_ORDER))
-            order_id_text = element.text
+            order_id_text = self.get_text(self.POSITION_ORDER)
             print(f"DEBUG: Order ID Text: '{order_id_text}'")
             return int(order_id_text)
         except Exception as e:
@@ -271,10 +256,9 @@ class TradingPage(BasePage):
             return 0
 
     def get_transaction_symbol(self):
+        """Get symbol from transaction table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_SYMBOL))
-            symbol_text = element.text
+            symbol_text = self.get_text(self.POSITION_SYMBOL)
             print(f"DEBUG: Transaction Symbol Text: '{symbol_text}'")
             return symbol_text
         except Exception as e:
@@ -282,10 +266,9 @@ class TradingPage(BasePage):
             return None
 
     def get_transaction_volume(self):
+        """Get volume from transaction table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_VOLUME))
-            volume_text = element.text
+            volume_text = self.get_text(self.POSITION_VOLUME)
             print(f"DEBUG: Transaction Volume Text: '{volume_text}'")
             return volume_text
         except Exception as e:
@@ -293,10 +276,9 @@ class TradingPage(BasePage):
             return None
 
     def get_transaction_entry_price(self):
+        """Get entry price from transaction table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_ENTRY_PRICE))
-            entry_price_text = element.text
+            entry_price_text = self.get_text(self.POSITION_ENTRY_PRICE)
             print(f"DEBUG: Transaction Entry Price Text: '{entry_price_text}'")
             return entry_price_text
         except Exception as e:
@@ -304,10 +286,9 @@ class TradingPage(BasePage):
             return None
 
     def get_transaction_sl(self):
+        """Get stop loss from transaction table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_SL))
-            sl_text = element.text
+            sl_text = self.get_text(self.POSITION_SL)
             print(f"DEBUG: Transaction SL Text: '{sl_text}'")
             return sl_text
         except Exception as e:
@@ -315,10 +296,9 @@ class TradingPage(BasePage):
             return None
 
     def get_transaction_tp(self):
+        """Get take profit from transaction table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.POSITION_TP))
-            tp_text = element.text
+            tp_text = self.get_text(self.POSITION_TP)
             print(f"DEBUG: Transaction TP Text: '{tp_text}'")
             return tp_text
         except Exception as e:
@@ -326,75 +306,73 @@ class TradingPage(BasePage):
             return None
     
     def edit_position(self, sl=None, tp=None):
-        wait = WebDriverWait(self.driver, 10)
-        element = wait.until(EC.visibility_of_element_located(self.POSITION_EDIT_BUTTON))
-        self.click(self.POSITION_EDIT_BUTTON)
-        time.sleep(1)
-        element = wait.until(EC.visibility_of_element_located(self.EDIT_POPOUT_TITLE))
-        if element.is_displayed():
-            # Wait for any overlay to disappear
-            try:
-                wait.until(EC.invisibility_of_element_located((By.ID, "overlay-aqx-trader")))
-            except:
-                pass # Overlay might not even appear or be fleeting
+        """Edit position SL/TP values"""
+        # Click edit button and wait for popout
+        self.wait_and_click(self.POSITION_EDIT_BUTTON)
+        self.wait_for_element_visible(self.EDIT_POPOUT_TITLE)
+        
+        # Wait for any overlay to disappear
+        try:
+            self.wait_for_element_disappear((By.ID, "overlay-aqx-trader"), timeout=self.short_timeout)
+        except:
+            pass  # Overlay might not be present
 
-            if sl:
-                sl_input = wait.until(EC.element_to_be_clickable(self.EDIT_POPOUT_SL_PRICE))
-                try:
-                    sl_input.click()
-                except:
-                    self.driver.execute_script("arguments[0].click();", sl_input)
-                time.sleep(1)
-                # clear() is not working, using Ctrl+A + Backspace instead
-                sl_input.send_keys(Keys.CONTROL + "a")
-                sl_input.send_keys(Keys.BACKSPACE)
-                time.sleep(1)
-                sl_input.send_keys(str(sl))
-                time.sleep(1)
-                self.click(self.EDIT_POPOUT_TITLE)
-            if tp:
-                tp_input = wait.until(EC.element_to_be_clickable(self.EDIT_POPOUT_TP_PRICE))
-                try:
-                    tp_input.click()
-                except:
-                    self.driver.execute_script("arguments[0].click();", tp_input)
-                time.sleep(1)
-                # clear() is not working, using Ctrl+A + Backspace instead
-                tp_input.send_keys(Keys.CONTROL + "a")
-                tp_input.send_keys(Keys.BACKSPACE)
-                time.sleep(1)
-                tp_input.send_keys(str(tp))
-                time.sleep(1)
-                self.click(self.EDIT_POPOUT_TITLE)
-            self.click(self.EDIT_POPOUT_UPDATE)
-            time.sleep(1)
-            element = wait.until(EC.visibility_of_element_located(self.EDIT_POPOUT_CONFIRM))
-            self.click(self.EDIT_POPOUT_CONFIRM)
+        if sl:
+            sl_input = self.wait_for_element_clickable(self.EDIT_POPOUT_SL_PRICE)
+            try:
+                sl_input.click()
+            except ElementClickInterceptedException:
+                # Use JavaScript click as fallback
+                self.execute_script("arguments[0].click();", sl_input)
+            
+            # Clear and enter new value using reliable method
+            sl_input.send_keys(Keys.CONTROL + "a")
+            sl_input.send_keys(Keys.BACKSPACE)
+            sl_input.send_keys(str(sl))
+            # Click title to blur field
+            self.click(self.EDIT_POPOUT_TITLE)
+            
+        if tp:
+            tp_input = self.wait_for_element_clickable(self.EDIT_POPOUT_TP_PRICE)
+            try:
+                tp_input.click()
+            except ElementClickInterceptedException:
+                # Use JavaScript click as fallback
+                self.execute_script("arguments[0].click();", tp_input)
+            
+            # Clear and enter new value
+            tp_input.send_keys(Keys.CONTROL + "a")
+            tp_input.send_keys(Keys.BACKSPACE)
+            tp_input.send_keys(str(tp))
+            # Click title to blur field
+            self.click(self.EDIT_POPOUT_TITLE)
+            
+        # Click update and confirm
+        self.click(self.EDIT_POPOUT_UPDATE)
+        self.wait_for_element_visible(self.EDIT_POPOUT_CONFIRM)
+        self.click(self.EDIT_POPOUT_CONFIRM)
         
     def close_position(self, volume=None):
-        wait = WebDriverWait(self.driver, 10)
+        """Close position with optional partial volume"""
         self.click(self.POSITION_CLOSE_BUTTON)
-        time.sleep(1)
-        wait.until(EC.visibility_of_element_located(self.CLOSE_POSITION_TITLE))
+        self.wait_for_element_visible(self.CLOSE_POSITION_TITLE)
+        
         if volume:
-            volume_input = wait.until(EC.element_to_be_clickable(self.CLOSE_POSITION_VOLUME))
+            volume_input = self.wait_for_element_clickable(self.CLOSE_POSITION_VOLUME)
             volume_input.click()
-            time.sleep(1)
-            # clear() is not working, using Ctrl+A + Backspace instead
+            # Clear and enter new volume
             volume_input.send_keys(Keys.CONTROL + "a")
             volume_input.send_keys(Keys.BACKSPACE)
-            time.sleep(1)
             volume_input.send_keys(str(volume))
-            time.sleep(1)
-        wait.until(EC.visibility_of_element_located(self.CLOSE_POSITION_CONFIRM))
+            
+        self.wait_for_element_visible(self.CLOSE_POSITION_CONFIRM)
         self.click(self.CLOSE_POSITION_CONFIRM)
 
     # Pending Orders
     def get_pending_orders_count(self):
+        """Get count of pending orders from tab text"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_TAB))
-            pending_orders_count = element.text
+            pending_orders_count = self.get_text(self.PENDING_ORDERS_TAB)
             print(f"DEBUG: Pending Orders Count: '{pending_orders_count}'")
             return pending_orders_count
         except Exception as e:
@@ -402,10 +380,9 @@ class TradingPage(BasePage):
             return None
     
     def get_pending_orders_order_id(self):
+        """Get order ID from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_ORDER))
-            order_id_text = element.text
+            order_id_text = self.get_text(self.PENDING_ORDERS_ORDER)
             print(f"DEBUG: Order ID Text: '{order_id_text}'")
             return int(order_id_text)
         except Exception as e:
@@ -413,10 +390,9 @@ class TradingPage(BasePage):
             return 0
 
     def get_pending_orders_symbol(self):
+        """Get symbol from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_SYMBOL))
-            symbol_text = element.text
+            symbol_text = self.get_text(self.PENDING_ORDERS_SYMBOL)
             print(f"DEBUG: Pending Orders Symbol Text: '{symbol_text}'")
             return symbol_text
         except Exception as e:
@@ -424,10 +400,9 @@ class TradingPage(BasePage):
             return None
 
     def get_pending_orders_volume(self):
+        """Get volume from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_VOLUME))
-            volume_text = element.text
+            volume_text = self.get_text(self.PENDING_ORDERS_VOLUME)
             print(f"DEBUG: Pending Orders Volume Text: '{volume_text}'")
             return volume_text
         except Exception as e:
@@ -435,10 +410,9 @@ class TradingPage(BasePage):
             return None
 
     def get_pending_orders_entry_price(self):
+        """Get entry price from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_ENTRY_PRICE))
-            entry_price_text = element.text
+            entry_price_text = self.get_text(self.PENDING_ORDERS_ENTRY_PRICE)
             print(f"DEBUG: Pending Orders Entry Price Text: '{entry_price_text}'")
             return entry_price_text
         except Exception as e:
@@ -446,10 +420,9 @@ class TradingPage(BasePage):
             return None
 
     def get_pending_orders_sl(self):
+        """Get SL from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_SL))
-            sl_text = element.text
+            sl_text = self.get_text(self.PENDING_ORDERS_SL)
             print(f"DEBUG: Pending Orders SL Text: '{sl_text}'")
             return sl_text
         except Exception as e:
@@ -457,10 +430,9 @@ class TradingPage(BasePage):
             return None
 
     def get_pending_orders_tp(self):
+        """Get TP from pending orders table"""
         try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.visibility_of_element_located(self.PENDING_ORDERS_TP))
-            tp_text = element.text
+            tp_text = self.get_text(self.PENDING_ORDERS_TP)
             print(f"DEBUG: Pending Orders TP Text: '{tp_text}'")
             return tp_text
         except Exception as e:
@@ -469,102 +441,95 @@ class TradingPage(BasePage):
     
 
     def edit_pending_order(self, sl=None, tp=None):
-        wait = WebDriverWait(self.driver, 10)
-        element = wait.until(EC.visibility_of_element_located(self.POSITION_EDIT_BUTTON))
-        self.click(self.POSITION_EDIT_BUTTON)
-        time.sleep(1)
-        element = wait.until(EC.visibility_of_element_located(self.EDIT_LIMIT_POPOUT_TITLE))
-        if element.is_displayed():
-            # Wait for any overlay to disappear
-            try:
-                wait.until(EC.invisibility_of_element_located((By.ID, "overlay-aqx-trader")))
-            except:
-                pass # Overlay might not even appear or be fleeting
+        \"\"\"Edit pending order SL/TP values\"\"\"
+        # Click edit button and wait for popout
+        self.wait_and_click(self.POSITION_EDIT_BUTTON)
+        self.wait_for_element_visible(self.EDIT_LIMIT_POPOUT_TITLE)
+        
+        # Wait for any overlay to disappear
+        try:
+            self.wait_for_element_disappear((By.ID, "overlay-aqx-trader"), timeout=self.short_timeout)
+        except:
+            pass  # Overlay might not be present
 
-            if sl:
-                sl_input = wait.until(EC.element_to_be_clickable(self.EDIT_LIMIT_POPOUT_SL_PRICE))
-                try:
-                    sl_input.click()
-                except:
-                    self.driver.execute_script("arguments[0].click();", sl_input)
-                time.sleep(1)
-                # clear() is not working, using Ctrl+A + Backspace instead
-                sl_input.send_keys(Keys.CONTROL + "a")
-                sl_input.send_keys(Keys.BACKSPACE)
-                time.sleep(1)
-                sl_input.send_keys(str(sl))
-                time.sleep(1)
-                self.click(self.EDIT_LIMIT_POPOUT_TITLE)
-            if tp:
-                tp_input = wait.until(EC.element_to_be_clickable(self.EDIT_LIMIT_POPOUT_TP_PRICE))
-                try:
-                    tp_input.click()
-                except:
-                    self.driver.execute_script("arguments[0].click();", tp_input)
-                time.sleep(1)
-                # clear() is not working, using Ctrl+A + Backspace instead
-                tp_input.send_keys(Keys.CONTROL + "a")
-                tp_input.send_keys(Keys.BACKSPACE)
-                time.sleep(1)
-                tp_input.send_keys(str(tp))
-                time.sleep(1)
-                self.click(self.EDIT_LIMIT_POPOUT_TITLE)
-            self.click(self.EDIT_LIMIT_POPOUT_CONFIRM)
-            time.sleep(1)
-            element = wait.until(EC.visibility_of_element_located(self.EDIT_POPOUT_CONFIRM))
-            self.click(self.EDIT_POPOUT_CONFIRM)
+        if sl:
+            sl_input = self.wait_for_element_clickable(self.EDIT_LIMIT_POPOUT_SL_PRICE)
+            try:
+                sl_input.click()
+            except ElementClickInterceptedException:
+                self.execute_script("arguments[0].click();", sl_input)
+            
+            # Clear and enter new value
+            sl_input.send_keys(Keys.CONTROL + "a")
+            sl_input.send_keys(Keys.BACKSPACE)
+            sl_input.send_keys(str(sl))
+            # Click title to blur field
+            self.click(self.EDIT_LIMIT_POPOUT_TITLE)
+            
+        if tp:
+            tp_input = self.wait_for_element_clickable(self.EDIT_LIMIT_POPOUT_TP_PRICE)
+            try:
+                tp_input.click()
+            except ElementClickInterceptedException:
+                self.execute_script("arguments[0].click();", tp_input)
+            
+            # Clear and enter new value
+            tp_input.send_keys(Keys.CONTROL + "a")
+            tp_input.send_keys(Keys.BACKSPACE)
+            tp_input.send_keys(str(tp))
+            # Click title to blur field
+            self.click(self.EDIT_LIMIT_POPOUT_TITLE)
+            
+        # Click confirm
+        self.click(self.EDIT_LIMIT_POPOUT_CONFIRM)
+        self.wait_for_element_visible(self.EDIT_POPOUT_CONFIRM)
+        self.click(self.EDIT_POPOUT_CONFIRM)
         
 
     def select_bulk_position_pending_order(self, position, option):
+        """Select bulk position or pending order action"""
         match position.lower():
             case 'position':
                 self.click(self.OPEN_POSITIONS_TAB)
-                time.sleep(1)
                 self.select_bulk_position_option(option)
             case 'pending order':
                 self.click(self.PENDING_ORDERS_TAB)
-                time.sleep(1)
                 self.select_bulk_pending_option(option)
             case _:
                 raise ValueError(f"Invalid position: {position}")
     
     def select_bulk_position_option(self, option):
+        """Select bulk close option for positions"""
         self.click(self.BULK_CLOSE_DROPDOWN)
         match option.lower():
             case 'all':
                 self.click(self.BULK_DROPDOWN_ALLPOSITION)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_ALL_BUTTON)
             case 'profitable':
                 self.click(self.BULK_DROPDOWN_PROFITPOSITION)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_PROFIT_BUTTON)
             case 'loss':
                 self.click(self.BULK_DROPDOWN_LOSSPOSITION)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_LOSS_BUTTON)
             case _:
                 raise ValueError(f"Invalid option: {option}")
 
     def select_bulk_pending_option(self, option):
+        """Select bulk delete option for pending orders"""
         self.click(self.BULK_DELETE_DROPDOWN)
         match option.lower():
             case 'all':
                 self.click(self.BULK_DROPDOWN_ALLORDER)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_ALL_BUTTON)
             case 'limit':
                 self.click(self.BULK_DROPDOWN_LIMITORDER)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_LIMIT_BUTTON)
             case 'stop':
                 self.click(self.BULK_DROPDOWN_STOPORDER)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_STOP_BUTTON)
-            # Function in the website not implemented yet
             case 'stoplimit':
+                # Function in the website not implemented yet
                 self.click(self.BULK_DROPDOWN_STOPLIMITORDER)
-                time.sleep(1)
                 self.click(self.BULK_CONFIRM_STOPLIMIT_BUTTON)
             case _:
                 raise ValueError(f"Invalid option: {option}")

@@ -1,6 +1,6 @@
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.env
+screenshots/
 .pytest_cache/
-*.html
-allure-results/
-allure-report/
