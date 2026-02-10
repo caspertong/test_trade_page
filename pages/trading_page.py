@@ -441,7 +441,7 @@ class TradingPage(BasePage):
     
 
     def edit_pending_order(self, sl=None, tp=None):
-        \"\"\"Edit pending order SL/TP values\"\"\"
+        """Edit pending order SL/TP values"""
         # Click edit button and wait for popout
         self.wait_and_click(self.POSITION_EDIT_BUTTON)
         self.wait_for_element_visible(self.EDIT_LIMIT_POPOUT_TITLE)

@@ -16,9 +16,9 @@ class Config:
     HEADLESS = os.getenv("HEADLESS", "false").lower() == "true"
     
     # Wait Configuration (in seconds)
-    DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "15"))
-    SHORT_TIMEOUT = int(os.getenv("SHORT_TIMEOUT", "5"))
-    LONG_TIMEOUT = int(os.getenv("LONG_TIMEOUT", "30"))
+    DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "10"))
+    SHORT_TIMEOUT = int(os.getenv("SHORT_TIMEOUT", "3"))
+    LONG_TIMEOUT = int(os.getenv("LONG_TIMEOUT", "20"))
     POLL_FREQUENCY = float(os.getenv("POLL_FREQUENCY", "0.5"))
     
     # Page Load Timeout
