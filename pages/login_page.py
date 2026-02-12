@@ -1,13 +1,16 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
+from selenium.webdriver.common.keys import Keys
 
 class LoginPage(BasePage):
     # Locators
-    ACCOUNT_INPUT = (By.CSS_SELECTOR, 'input[data-testid="login-user-id"]')
-    PASSWORD_INPUT = (By.CSS_SELECTOR, 'input[data-testid="login-password"]')
-    LOGIN_BUTTON = (By.CSS_SELECTOR, 'button[data-testid="login-submit"]')
+    ACCOUNT_ICON = (By.CSS_SELECTOR, "a[id='account']")
+    ACCOUNT_EMAIL_INPUT = (By.CSS_SELECTOR, "input[type='email']")
+    PASSWORD_INPUT = (By.CSS_SELECTOR, "input[id='current-password']")
+    SIGNIN_BUTTON = (By.XPATH, "//button[@type='submit']")
+
     
-    URL = "https://aqxtrader.aquariux.com/web/login"
+    URL = "https://graphcommerce.vercel.app/"
 
     def __init__(self, driver):
         super().__init__(driver)
@@ -15,14 +18,17 @@ class LoginPage(BasePage):
     def navigate(self):
         self.open_url(self.URL)
 
-    def enter_account_id(self, account_id):
-        self.send_keys(self.ACCOUNT_INPUT, account_id)
+    def click_account_icon(self):
+        self.click(self.ACCOUNT_ICON)
+
+    def enter_account_email(self, account_email):
+        self.send_keys(self.ACCOUNT_EMAIL_INPUT, account_email)
 
     def enter_password(self, password):
-        self.send_keys(self.PASSWORD_INPUT, password)
+        self.send_keys(self.PASSWORD_INPUT, password + Keys.RETURN)
 
-    def click_login(self):
-        self.click(self.LOGIN_BUTTON)
+    def click_signin(self):
+        self.click(self.SIGNIN_BUTTON)
     
-    def is_login_button_enabled(self):
-        return self.is_enabled(self.LOGIN_BUTTON)
+    def is_signin_button_enabled(self):
+        return self.is_enabled(self.SIGNIN_BUTTON)

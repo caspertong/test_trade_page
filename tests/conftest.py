@@ -23,7 +23,12 @@ def driver(request):
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-popup-blocking")
+        options.add_argument("--disable-infobars")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-sync")
+        options.add_argument("--incognito")
         # Disable automation flags for better stability
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
@@ -51,9 +56,12 @@ def driver(request):
     yield driver
     
     # Screenshot on failure
-    if Config.SCREENSHOT_ON_FAILURE and request.node.rep_call.failed:
-        test_name = request.node.name
-        driver.save_screenshot(f"{Config.SCREENSHOT_DIR}/{test_name}_failure.png")
+    if Config.SCREENSHOT_ON_FAILURE:
+        # Check if rep_call exists (it might not if setup failed)
+        rep_call = getattr(request.node, "rep_call", None)
+        if rep_call and rep_call.failed:
+            test_name = request.node.name
+            driver.save_screenshot(f"{Config.SCREENSHOT_DIR}/{test_name}_failure.png")
     
     # Teardown
     driver.quit()
@@ -68,19 +76,19 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture(scope="function")
-def login_to_trade(driver):
+def login(driver):
     """Login fixture that uses explicit waits instead of sleep"""
     from pages.login_page import LoginPage
     from utils.wait_helpers import wait_for_url_contains
     
     login_page = LoginPage(driver)
     login_page.navigate()
-    login_page.enter_account_id(Config.TEST_USERNAME)
+    login_page.click_account_icon()
+    login_page.enter_account_email(Config.TEST_EMAIL)
     login_page.enter_password(Config.TEST_PASSWORD)
-    login_page.click_login()
+    # login_page.click_signin() - Submit handled in enter_password
     
     # Wait for redirect to trade page instead of fixed sleep
-    wait_for_url_contains(driver, "/trade", timeout=Config.DEFAULT_TIMEOUT)
     wait_for_page_load(driver)
     
     return driver

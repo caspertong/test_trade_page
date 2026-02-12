@@ -9,7 +9,7 @@ class Config:
     """Centralized configuration for Selenium tests"""
     
     # Base URL
-    BASE_URL = os.getenv("BASE_URL", "https://aqxtrader.aquariux.com")
+    BASE_URL = os.getenv("BASE_URL", "https://graphcommerce.vercel.app/")
     
     # Browser Settings
     BROWSER = os.getenv("BROWSER", "chrome").lower()
@@ -29,8 +29,8 @@ class Config:
     SCREENSHOT_DIR = os.getenv("SCREENSHOT_DIR", "screenshots")
     
     # Test Credentials
-    TEST_USERNAME = os.getenv("TEST_USERNAME", "1000529")
-    TEST_PASSWORD = os.getenv("TEST_PASSWORD", "A8WU$l3ne$$u")
+    TEST_EMAIL = os.getenv("TEST_EMAIL", "test123@gmail.com")
+    TEST_PASSWORD = os.getenv("TEST_PASSWORD", "K9#vP2m!zL4t-Q8x")
     
     # Retry Configuration
     MAX_RETRY_ATTEMPTS = int(os.getenv("MAX_RETRY_ATTEMPTS", "3"))
